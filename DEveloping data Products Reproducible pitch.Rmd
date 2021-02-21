@@ -1,0 +1,123 @@
+---
+title: "Developing Data Products Reproducible Pitch"
+author: "Simran"
+date: "21/02/2021"
+output:
+  slidy_presentation: default
+  ioslides_presentation: default
+---
+
+***
+#Developing Data Products Assignment
+
+
+##This is a task for the data science coursera course about developing data products for week 4. As part of this, I have created a shiny app and it is deployed on shiny server with the following link
+https://simra.shinyapps.io/myapp1/ and the code at https://github.com/Simran-2020/datasciencecoursera
+
+
+
+##Overview
+
+The shiny app plots graph against miles per gallon (mpg) for different variables from the mtcars dataset.We observe that there is a strong correlation between wt and mpg.This project suggests that if you want to have high miles per gallon (mpg), buy a car with low weight (wt)!
+
+***
+### Let us see the mtcars dataset
+
+```{r}
+library(dplyr)
+library(explore)
+mtcars %>% describe()
+```
+***
+
+UI Code
+```{r}
+library(shiny)
+
+
+# Define UI for miles per gallon app ----
+ui <- fluidPage(
+    
+    # App title ----
+    titlePanel("Miles Per Gallon"),
+    
+    # Sidebar layout with input and output definitions ----
+    sidebarLayout(
+        
+        # Sidebar panel for inputs ----
+        sidebarPanel(
+            
+            # Input: Selector for variable to plot against mpg ----
+            selectInput("variable", "Variable:",
+                        c("Cylinders" = "cyl",
+                          "Weight (lb/1000)" = "wt",
+                          "Transmission" = "am",
+                          "Gears" = "gear",
+                          "Displacement (cu.in.)" = "disp",
+                          "Gross horsepower" = "hp",
+                          "Rear axle ratio" = "drat",
+                          "1/4 mile time" = "qsec",
+                          "V/S" = "vs",
+                          "Number of carburetors" = "carb"
+                        )),
+            
+            # Input: Checkbox for whether outliers should be included ----
+            checkboxInput("outliers", "Show outliers", TRUE)
+            
+        ),
+        
+        # Main panel for displaying outputs ----
+        mainPanel(
+            
+            # Output: Formatted text for caption ----
+            h3(textOutput("caption")),
+            
+            # Output: Plot of the requested variable against mpg ----
+            plotOutput("mpgPlot")
+            
+        )
+    )
+)
+```
+***
+
+Server Code
+
+```{r}
+library(shiny)
+
+mpgData <- mtcars
+mpgData$am <- factor(mpgData$am, labels = c("Automatic", "Manual"))
+
+# Define server logic to plot various variables against mpg ----
+server <- function(input, output) {
+    
+    # Compute the formula text ----
+    # This is in a reactive expression since it is shared by the
+    # output$caption and output$mpgPlot functions
+    formulaText <- reactive({
+        paste("mpg ~", input$variable)
+    })
+    
+    # Return the formula text for printing as a caption ----
+    output$caption <- renderText({
+        formulaText()
+    })
+    
+    # Generate a plot of the requested variable against mpg ----
+    # and only exclude outliers if requested
+    output$mpgPlot <- renderPlot({
+        boxplot(as.formula(formulaText()),
+                data = mpgData,
+                outline = input$outliers,
+                col = "#75AADB", pch = 19)
+    })
+    
+}
+
+```
+
+
+
+
+  
